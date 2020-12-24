@@ -28,14 +28,7 @@ planning to use `gazebo_world.launch`.
 Defaults to 1 (out of 100).  
  * `box_height`: Height of boxes in gazebo environment.  Defaults to 2m. 
  * `export_dir`: Directory of output mesh Default to current directory.
-The YAML file does not specify the export directory because it doesn't seem to
-support a value with substitution args like
-`"$(find map2gazebo)/models/map/meshes"`, which is the desired default value.
-The roslaunch `<arg>` and `<param>` tags are therefore used, but unfortunately
-the `<param>` tag overrides any non-default value loaded from the YAML file.
-Therefore, don't use the YAML parameter file to set a non-default export
-directory.  (Let me know, or better submit a PR, if you know of a more elegant
-way to do this!)
+ 
 
 ## Installation
 NOTE:
