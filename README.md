@@ -3,27 +3,15 @@
 Subscribes to your map topic and exports a mesh for use in Gazebo in the
 destination folder you specify.  The mesh will have obstacles (tall boxes)
 corresponding to all occupied map squares.  Requires a map to be publishing
-somewhere, and will probably work better if the map is static; I recommend
-using `map_server` with a saved map.  
-
-If run with default parameters, it will write the mesh to this package's
-models/map/meshes folder.  You will then be able to run `gazebo_world.launch`
-to launch Gazebo pre-populated with the map mesh.  
+somewhere, and will probably work better if the map is static.
 
 ## Arguments and parameters
-
-The export directory is specified as a launchfile argument.  Change it using
-```
-roslaunch map2gazebo map2gazebo.launch export_dir:=/path/to/export_dir
-```
-Note that if you change the export directory, `gazebo_world.launch` will not
-work unmodified.
 
 Default parameters are specified in config/defaults.yaml; the location of the
 YAML parameter file is also a launchfile argument.  To change the defaults,
 make a new YAML parameter file, and run
 ```
-roslaunch map2gazebo map2gazebo.launch params_file:=/path/to/your/params.yaml
+ros2 launch map2gazebo map2gazebo.launch.py params_file:=params.yaml
 ```
 Alternatively you could just edit the default parameter file (not recommended,
 but I can't stop you).
@@ -39,7 +27,7 @@ planning to use `gazebo_world.launch`.
  * `occupied_thresh`: Minimum threshold value for considering a cell occupied. 
 Defaults to 1 (out of 100).  
  * `box_height`: Height of boxes in gazebo environment.  Defaults to 2m. 
-
+ * `export_dir`: Directory of output mesh Default to current directory.
 The YAML file does not specify the export directory because it doesn't seem to
 support a value with substitution args like
 `"$(find map2gazebo)/models/map/meshes"`, which is the desired default value.
@@ -68,18 +56,18 @@ pip install --user networkx
 
 Git clone map2gazebo and build package
 ```
-mkdir -p map2gz_ros1_ws/src
-cd map2gz_ros1_ws/src
-git clone https://github.com/H-HChen/map2gazebo.git 
+mkdir -p map2gz_ros2_ws/src
+cd map2gz_ros2_ws/src
+git clone https://github.com/H-HChen/map2gazebo.git -b foxy-devel
 cd ..
-catkin_make
+colcon build --symlink-install
 ```
 
 ## Online conversion
 After you launch SLAM applicatoin and make sure "/map" topic is published.
 ```
-source devel/setup.bash
-roslaunch map2gazebo map2gazebo.launch
+source install/local_setup.bash
+ros2 launch map2gazebo map2gazebo.launch.py
 ```
 Remember to turn off the node when the map is **completely done**
 
