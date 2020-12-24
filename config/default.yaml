@@ -1,7 +1,7 @@
 # YAML config file with default parameters for map2gazebo
 
 # Topic that the map to convert is being published on
-/minimal_param_node:
+map2gazebo:
   ros__parameters:
     map_topic: "/map"
     # Can be "stl" or "dae"

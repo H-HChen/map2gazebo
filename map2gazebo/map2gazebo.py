@@ -10,15 +10,15 @@ from rclpy.node import Node
 class MapConverter(Node):
     def __init__(self):
         super().__init__('minimal_param_node')
-        self.declare_parameter('threshold', 1)
-        self.declare_parameter('height', 2.0)
+        self.declare_parameter('occupied_thresh', 1)
+        self.declare_parameter('box_height', 2.0)
         self.declare_parameter('map_topic', '/map')
         self.declare_parameter('mesh_type', 'stl')
         self.declare_parameter('export_dir', os.path.abspath('.'))
 
         self.map_topic = self.get_parameter('map_topic').get_parameter_value().string_value
-        self.threshold = self.get_parameter('threshold').get_parameter_value().integer_value
-        self.height = self.get_parameter('threshold').get_parameter_value().double_value
+        self.threshold = self.get_parameter('occupied_thresh').get_parameter_value().integer_value
+        self.height = self.get_parameter('box_height').get_parameter_value().double_value
         self.mesh_type = self.get_parameter("mesh_type").get_parameter_value().string_value
         self.export_dir = self.get_parameter("export_dir").get_parameter_value().string_value
         self.get_logger().info("export mesh file at: " + self.export_dir)

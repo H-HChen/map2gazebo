@@ -13,7 +13,8 @@ from launch.substitutions import LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 
 def generate_launch_description():
-    config = Path(get_package_share_directory('map2gazebo'), 'default.yaml')
+    params_file = LaunchConfiguration('params_file', default='default.yaml')
+    config_dir=[os.path.join(get_package_share_directory('map2gazebo')),'/', params_file]
 
     return LaunchDescription([
 
@@ -22,6 +23,6 @@ def generate_launch_description():
             executable='map2gazebo',
             name='map2gazebo',
             output='screen',
-            parameters=[config],
+            parameters=[config_dir],
         ),
     ])
