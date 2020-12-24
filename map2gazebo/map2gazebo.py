@@ -2,24 +2,37 @@ import cv2
 import numpy as np
 import trimesh
 from matplotlib.tri import Triangulation
-
-import rospy
+import os
+import rclpy
 from nav_msgs.msg import OccupancyGrid
+from rclpy.node import Node
 
-class MapConverter(object):
-    def __init__(self, map_topic, threshold=1, height=2.0):
-        self.test_map_pub = rospy.Publisher(
-                "test_map", OccupancyGrid, latch=True, queue_size=1)
-        rospy.Subscriber(map_topic, OccupancyGrid, self.map_callback)
-        self.threshold = threshold
-        self.height = height
+class MapConverter(Node):
+    def __init__(self):
+        super().__init__('minimal_param_node')
+        self.declare_parameter('threshold', 1)
+        self.declare_parameter('height', 2.0)
+        self.declare_parameter('map_topic', '/map')
+        self.declare_parameter('mesh_type', 'stl')
+        self.declare_parameter('export_dir', os.path.abspath('.'))
+
+        self.map_topic = self.get_parameter('map_topic').get_parameter_value().string_value
+        self.threshold = self.get_parameter('threshold').get_parameter_value().integer_value
+        self.height = self.get_parameter('threshold').get_parameter_value().double_value
+        self.mesh_type = self.get_parameter("mesh_type").get_parameter_value().string_value
+        self.export_dir = self.get_parameter("export_dir").get_parameter_value().string_value
+        self.get_logger().info("export mesh file at: " + self.export_dir)
+
+        #self.test_map_pub = self.create_publisher(OccupancyGrid, "test_map", 1)
+        self.map_sub = self.create_subscription(OccupancyGrid, self.map_topic, self.map_callback, 10)
         # Probably there's some way to get trimesh logs to point to ROS
         # logs, but I don't know it.  Uncomment the below if something
         # goes wrong with trimesh to get the logs to print to stdout.
         #trimesh.util.attach_to_log()
-
+        self.get_logger().info("map2gazebo running")
+        
     def map_callback(self, map_msg):
-        rospy.loginfo("Received map")
+        self.get_logger().info("Received map")
         map_dims = (map_msg.info.height, map_msg.info.width)
         map_array = np.array(map_msg.data).reshape(map_dims)
 
@@ -30,32 +43,32 @@ class MapConverter(object):
 
         corners = list(np.vstack(contours))
         corners = [c[0] for c in corners]
-        self.publish_test_map(corners, map_msg.info, map_msg.header)
+        #self.publish_test_map(corners, map_msg.info, map_msg.header)
         mesh = trimesh.util.concatenate(meshes)
 
         # Export as STL or DAE
-        mesh_type = rospy.get_param("~mesh_type", "stl")
-        export_dir = rospy.get_param("~export_dir")
-        if mesh_type == "stl":
-            with open(export_dir + "/map.stl", 'wb') as f:
+        
+        if self.mesh_type == "stl":
+            with open(self.export_dir + "/map.stl", 'wb') as f:
                 mesh.export(f, "stl")
-            rospy.loginfo("Exported STL.  You can shut down this node now")
-        elif mesh_type == "dae":
+            self.get_logger().info("Exported STL. please shut down this node when map is done")
+        elif self.mesh_type == "dae":
             with open(export_dir + "/map.dae", 'w') as f:
                 f.write(trimesh.exchange.dae.export_collada(mesh).decode())
-            rospy.loginfo("Exported DAE.  You can shut down this node now")
+            self.get_logger().info("Exported DAE. please shut down this node when map is done")
 
     def publish_test_map(self, points, metadata, map_header):
+        #Broken, about to fix.
         """
         For testing purposes, publishes a map highlighting certain points.
         points is a list of tuples (x, y) in the map's coordinate system.
         """
-        test_map = np.zeros((metadata.height, metadata.width))
+        test_map = np.zeros((metadata.height, metadata.width),dtype = np.uint8)
         for x, y in points:
             test_map[y, x] = 100
         test_map_msg = OccupancyGrid()
         test_map_msg.header = map_header
-        test_map_msg.header.stamp = rospy.Time.now()
+        test_map_msg.header.stamp = self.get_clock().now().to_msg()
         test_map_msg.info = metadata
         test_map_msg.data = list(np.ravel(test_map))
         self.test_map_pub.publish(test_map_msg)
@@ -106,7 +119,7 @@ class MapConverter(object):
                      [7, 3, 5]]
             mesh = trimesh.Trimesh(vertices=vertices, faces=faces)
             if not mesh.is_volume:
-                rospy.logdebug("Fixing mesh normals")
+                self.get_logger().debug("Fixing mesh normals")
                 mesh.fix_normals()
             meshes.append(mesh)
         mesh = trimesh.util.concatenate(meshes)
@@ -124,12 +137,11 @@ def coords_to_loc(coords, metadata):
     # instead of assuming origin is at z=0 with no rotation wrt map frame
     return np.array([loc_x, loc_y, 0.0])
 
+def main(args=None):
+    rclpy.init(args=args)
+    converter_node = MapConverter()
+    rclpy.spin(converter_node)
+
+
 if __name__ == "__main__":
-    rospy.init_node("map2gazebo")
-    map_topic = rospy.get_param("~map_topic", "map")
-    occupied_thresh = rospy.get_param("~occupied_thresh", 1)
-    box_height = rospy.get_param("~box_height", 2.0)
-    converter = MapConverter(map_topic,
-            threshold=occupied_thresh, height=box_height)
-    rospy.loginfo("map2gazebo running")
-    rospy.spin()
+    main()
