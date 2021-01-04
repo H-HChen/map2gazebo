@@ -4,6 +4,7 @@ import trimesh
 from matplotlib.tri import Triangulation
 import yaml
 import argparse
+import os
 
 class MapConverter():
     def __init__(self, map_dir, export_dir, threshold=105, height=2.0):
@@ -111,12 +112,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(argument_default=argparse.SUPPRESS)
     parser.add_argument(
         '--map_dir', type=str, required=True,
-        help='where the map you want to convert'
+        help='File name of the map to convert'
     )
 
     parser.add_argument(
-        '--export_dir', type=str, required=True,
-        help='output directory'
+        '--export_dir', type=str, default=os.path.abspath('.'),
+        help='Mesh output directory'
     )
 
     option = parser.parse_args()
