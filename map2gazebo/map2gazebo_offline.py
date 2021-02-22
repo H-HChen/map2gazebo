@@ -5,6 +5,7 @@ from matplotlib.tri import Triangulation
 import yaml
 import argparse
 import os
+import sys
 
 class MapConverter():
     def __init__(self, map_dir, export_dir, threshold=105, height=2.0):
@@ -19,11 +20,11 @@ class MapConverter():
         map_array = cv2.imread(self.map_dir)
         map_array = cv2.flip(map_array, 0)
         print(f'loading map file: {self.map_dir}')
-        if os.path.isfile(self.map_dir):
-            try:
-                map_array = cv2.cvtColor(map_array, cv2.COLOR_BGR2GRAY)
-            except cv2.error as e:
-                print(e)
+        try:
+            map_array = cv2.cvtColor(map_array, cv2.COLOR_BGR2GRAY)
+        except cv2.error as err:
+            print(err, "Conversion failed: Invalid image input, please check your file path")    
+            sys.exit()
         info_dir = self.map_dir.replace('pgm','yaml')
 
         with open(info_dir, 'r') as stream:
