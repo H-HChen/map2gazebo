@@ -19,8 +19,11 @@ class MapConverter():
         map_array = cv2.imread(self.map_dir)
         map_array = cv2.flip(map_array, 0)
         print(f'loading map file: {self.map_dir}')
-
-        map_array = cv2.cvtColor(map_array, cv2.COLOR_BGR2GRAY)
+        if os.path.isfile(self.map_dir):
+            try:
+                map_array = cv2.cvtColor(map_array, cv2.COLOR_BGR2GRAY)
+            except cv2.error as e:
+                print(e)
         info_dir = self.map_dir.replace('pgm','yaml')
 
         with open(info_dir, 'r') as stream:
